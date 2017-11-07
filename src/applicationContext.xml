@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+	<context:component-scan base-package="org.yk"></context:component-scan>
+
+	<!-- 配置c3p0数据源 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		p:user="root"
+		p:password="12345678"
+		p:driverClass="com.mysql.jdbc.Driver"
+		p:jdbcUrl="jdbc:mysql://localhost/ssh?useUnicode=true&amp;characterEncoding=UTF-8"
+		p:initialPoolSize="5"
+		p:maxPoolSize="10"
+	></bean>
+	
+	<!-- 出现的问题 java.lang.NoClassDefFoundError: org/apache/commons/logging/LogFactory ：缺少commons-logging.jar文件
+	java.lang.NoClassDefFoundError: com/mchange/v2/ser/Indirector 缺少c3p0的辅助包mchange-commons-java-0.2.12.jar -->
+	<!-- 配置SessionFactory -->
+	<bean id="sessionFactory" 
+		class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+		<!-- 注入DataSource -->
+		<property name="dataSource" ref="dataSource"></property>
+		<!-- 配置生成数据表的事项 -->
+		<property name="hibernateProperties">
+			<props>
+				<!-- 数据库方言 -->
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.format_sql">true</prop>
+				<prop key="hibernate.hbm2ddl.auto">update</prop>
+			</props>
+		</property>
+		<!-- 列出所有实例化类 -->
+		<property name="annotatedClasses">
+			<list>
+				<value>org.yk.entitys.Building</value>
+				<value>org.yk.entitys.Dorm</value>
+				<value>org.yk.entitys.Floor</value>
+				<value>org.yk.entitys.Student</value>
+				<value>org.yk.entitys.ManagerInfo</value>
+				<value>org.yk.entitys.StudentInfo</value>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- 配置声明式事务 -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>	
+	</bean>
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" read-only="true"/>
+			<tx:method name="*"/>
+		</tx:attributes>
+	</tx:advice>
+	<aop:config>
+		<aop:pointcut expression="execution(* org.yk.service.*.*(..))" id="txPointcut"/>
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="txPointcut"/>
+	</aop:config>
+</beans>

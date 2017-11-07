@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+
+<struts>
+
+    <constant name="struts.enable.DynamicMethodInvocation" value="false" />
+    <constant name="struts.devMode" value="true" />
+
+    <package name="default" namespace="/" extends="struts-default,json-default">
+		
+		<!-- 定义新的拦截器栈，配置prepare拦截器栈 alwaysInvokePrepare 参数值为 false -->
+    	<interceptors>
+    		<interceptor-stack name="sshStack">
+    			<interceptor-ref name="paramsPrepareParamsStack">
+    				<param name="prepare.alwaysInvokePrepare">false</param>
+    			</interceptor-ref>
+    		</interceptor-stack>
+    	</interceptors>
+    	
+    	<!-- 使用新的拦截器栈 -->
+    	<default-interceptor-ref name="sshStack"></default-interceptor-ref>
+		
+		<action name="Dormitory-*" class="managerAction" method="{1}">
+			<result name="managerLogin">managerLogin.jsp</result>
+			<result name="managerWelcomPage">managerWelcomPage.jsp</result>
+			<result name="managerSelect">managerSelect.jsp</result>
+			
+			<result name="success" type="json">  
+                <param name="root">result</param>
+            </result>
+            
+            <result name="insert">insert.jsp</result>
+            
+            <result type="stream" name="ajax-success">
+    			<param name="contetType">text/html</param>
+    			<param name="inputName">inputStream</param>
+    		</result>
+		</action>
+		
+		<action name="Student-*" class="studentAction" method="{1}">
+			<result name="studentLogin">studentLogin.jsp</result>
+			<result name="studentWelcomPage">studentWelcomPage.jsp</result>
+		</action>
+        
+    </package>
+</struts>
